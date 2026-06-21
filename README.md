@@ -79,6 +79,31 @@ sudo systemctl daemon-reload
 sudo /usr/local/sbin/ludus-wg-callbacks.sh   # patch the current file once
 ```
 
+## Force a re-apply
+
+You rarely need to. `install.sh` patches the file once, and the drop-in puts it back
+on the next `ludus` start anyway (every boot, and the restart `ludus-server --update`
+does). If you want to run it now, just call the patcher yourself. It does the same
+thing the `ExecStartPre` hook does, and it doesn't touch the running server:
+
+```bash
+sudo /usr/local/sbin/ludus-wg-callbacks.sh
+```
+
+It only logs when it actually changes something, so you'll see nothing if the file is
+already `ACCEPT`:
+
+```bash
+journalctl -t ludus-wg-callbacks
+```
+
+To restart the ludus server itself, the lightest option is the single service that
+carries the drop-in:
+
+```bash
+sudo systemctl restart ludus
+```
+
 ## Apply to ranges you've already deployed
 
 Patching the host file only changes the next deploy. A range that's already up
