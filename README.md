@@ -12,6 +12,22 @@ Both work the same way. Ludus re-extracts its `ansible/` tree from the server bi
 on every `ludus-server --update`, which reverts any hand edit, so each patch is a
 tiny idempotent script that a `ludus.service` drop-in re-applies on every (re)start.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [WireGuard callbacks](#wireguard-callbacks)
+- [How it works (two layers)](#how-it-works-two-layers)
+- [Default range timezone (Etc/UTC)](#default-range-timezone-etcutc)
+- [Install](#install)
+- [Force a re-apply](#force-a-re-apply)
+- [Apply to ranges you've already deployed](#apply-to-ranges-youve-already-deployed)
+- [Does it survive restoring or rebooting VMs?](#does-it-survive-restoring-or-rebooting-vms)
+- [Verify](#verify)
+- [Uninstall](#uninstall)
+- [Safety notes](#safety-notes)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## WireGuard callbacks
 
 Keep callbacks from a range to a WireGuard client working by default, the way they
