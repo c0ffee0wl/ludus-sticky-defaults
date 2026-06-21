@@ -6,14 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A small self-contained tool for a **Ludus** host (Debian 12 + Proxmox; https://gitlab.com/badsectorlabs/ludus) that keeps range &rarr; WireGuard callbacks allowed by default, the way they were in Ludus 1. It's a Bash patcher (`ludus-wg-callbacks.sh`), a systemd drop-in (`ludus.service.d/10-wg-callbacks.conf`), `install.sh` / `uninstall.sh`, and the docs. There is no build system, package manifest, or test suite — the project is the script, the unit drop-in, and their docs.
 
+`install.sh` (root) lands the patcher at `/usr/local/sbin/ludus-wg-callbacks.sh` (mode 700) and the drop-in at `/etc/systemd/system/ludus.service.d/10-wg-callbacks.conf` (mode 644), runs `systemctl daemon-reload`, and patches the on-disk file once; `uninstall.sh` (root) removes both and stops future re-patching but reverts nothing.
+
 ## Working on the script
 
-Validate after any change. These are the only checks, and both must pass clean:
+Validate after any change. These are the only checks, and both must pass clean (run them on whichever of the three shell scripts you touched — patcher, `install.sh`, `uninstall.sh`):
 
 ```bash
 bash -n ludus-wg-callbacks.sh      # syntax
 shellcheck ludus-wg-callbacks.sh   # lint
 ```
+
+The patcher runs under `set -uo pipefail` — deliberately **not** `set -e`. Its no-op paths rely on explicit `|| exit 0` guards and an `if ! sed`, so keep new fallible commands guarded the same way rather than reaching for `set -e` (which `install.sh`/`uninstall.sh` do use, since they should abort on any failure).
 
 It only does anything on a real Ludus host (needs root and the extracted ansible tree). To exercise it off-host, point it at a copy with the `LUDUS_FW_FILE` env var:
 
