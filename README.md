@@ -4,9 +4,9 @@ Two small patches for a [Ludus](https://gitlab.com/badsectorlabs/ludus) host. Ea
 one restores a Ludus 1 default and makes it stick across upgrades. They share one
 installer and don't depend on each other:
 
-1. **WireGuard callbacks** — keep range &rarr; WireGuard client callbacks allowed by
+1. **WireGuard callbacks**: keep range &rarr; WireGuard client callbacks allowed by
    default. This is what the repo started as.
-2. **Default range timezone** — set the default timezone for range VMs to `Etc/UTC`.
+2. **Default range timezone**: set the default timezone for range VMs to `Etc/UTC`.
 
 Both work the same way. Ludus re-extracts its `ansible/` tree from the server binary
 on every `ludus-server --update`, which reverts any hand edit, so each patch is a
@@ -253,6 +253,6 @@ keeps its current behaviour until you re-deploy it.
   the exit status, so a missing or broken patcher can never stop `ludus` from
   starting.
 - They never touch the Ludus binary or the embedded source, never restart a range,
-  and each scopes its edit to a single line — the WireGuard patch leaves the sibling
+  and each scopes its edit to a single line: the WireGuard patch leaves the sibling
   `inter_vlan_default` and `external_default` rules alone, and the timezone patch
   leaves every other `server-config.yml` default alone.
