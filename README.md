@@ -129,11 +129,11 @@ Doing it by hand instead:
 
 ```bash
 sudo install -d -m 755 /etc/systemd/system/ludus.service.d
-sudo install -m 700 ludus-wg-callbacks.sh /usr/local/sbin/ludus-wg-callbacks.sh
-sudo install -m 700 ludus-timezone.sh     /usr/local/sbin/ludus-timezone.sh
-sudo install -m 644 ludus.service.d/10-wg-callbacks.conf \
+sudo install -m 700 scripts/ludus-wg-callbacks.sh /usr/local/sbin/ludus-wg-callbacks.sh
+sudo install -m 700 scripts/ludus-timezone.sh     /usr/local/sbin/ludus-timezone.sh
+sudo install -m 644 systemd/ludus.service.d/10-wg-callbacks.conf \
   /etc/systemd/system/ludus.service.d/10-wg-callbacks.conf
-sudo install -m 644 ludus.service.d/20-timezone.conf \
+sudo install -m 644 systemd/ludus.service.d/20-timezone.conf \
   /etc/systemd/system/ludus.service.d/20-timezone.conf
 sudo systemctl daemon-reload
 sudo /usr/local/sbin/ludus-wg-callbacks.sh   # patch the current files once
@@ -204,8 +204,8 @@ router's whole ruleset to `/etc/iptables/rules.v4`, and the router runs
 ## Verify
 
 ```bash
-bash -n ludus-wg-callbacks.sh ludus-timezone.sh      # syntax
-shellcheck ludus-wg-callbacks.sh ludus-timezone.sh   # lint
+bash -n scripts/ludus-wg-callbacks.sh scripts/ludus-timezone.sh      # syntax
+shellcheck scripts/ludus-wg-callbacks.sh scripts/ludus-timezone.sh   # lint
 
 systemctl cat ludus                # both drop-ins should appear under the unit
 journalctl -t ludus-wg-callbacks   # a line each time it patches the firewall file
@@ -216,7 +216,7 @@ You can exercise the timezone patcher off a Ludus host against a copy:
 
 ```bash
 cp /opt/ludus/ansible/server-config.yml /tmp/sc.yml
-LUDUS_TZ_FILE=/tmp/sc.yml ./ludus-timezone.sh
+LUDUS_TZ_FILE=/tmp/sc.yml ./scripts/ludus-timezone.sh
 grep timezone /tmp/sc.yml          # -> timezone: "Etc/UTC"
 ```
 

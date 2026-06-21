@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A small self-contained set of patches for a **Ludus** host (Debian 12 + Proxmox; https://gitlab.com/badsectorlabs/ludus) that restore a couple of Ludus 1 defaults and keep them across upgrades. Two independent patches that share one installer:
 
-- **WireGuard callbacks** — `ludus-wg-callbacks.sh` + `ludus.service.d/10-wg-callbacks.conf`: keep range &rarr; WireGuard callbacks allowed by default.
-- **Default range timezone** — `ludus-timezone.sh` + `ludus.service.d/20-timezone.conf`: set the default range-VM timezone to `Etc/UTC`.
+- **WireGuard callbacks** — `scripts/ludus-wg-callbacks.sh` + `systemd/ludus.service.d/10-wg-callbacks.conf`: keep range &rarr; WireGuard callbacks allowed by default.
+- **Default range timezone** — `scripts/ludus-timezone.sh` + `systemd/ludus.service.d/20-timezone.conf`: set the default range-VM timezone to `Etc/UTC`.
 
 Each is a Bash patcher + a systemd drop-in. There is no build system, package manifest, or test suite — the project is the scripts, the unit drop-ins, and their docs.
 
@@ -18,8 +18,8 @@ Each is a Bash patcher + a systemd drop-in. There is no build system, package ma
 Validate after any change. These are the only checks, and both must pass clean (run them on whichever of the four shell scripts you touched — the two patchers, `install.sh`, `uninstall.sh`):
 
 ```bash
-bash -n ludus-wg-callbacks.sh      # syntax
-shellcheck ludus-wg-callbacks.sh   # lint
+bash -n scripts/ludus-wg-callbacks.sh      # syntax
+shellcheck scripts/ludus-wg-callbacks.sh   # lint
 ```
 
 Each patcher runs under `set -uo pipefail` — deliberately **not** `set -e`. Their no-op paths rely on explicit `|| exit 0` guards and an `if ! sed`, so keep new fallible commands guarded the same way rather than reaching for `set -e` (which `install.sh`/`uninstall.sh` do use, since they should abort on any failure).
@@ -28,10 +28,10 @@ Each only does anything on a real Ludus host (needs root and the extracted ansib
 
 ```bash
 cp /path/to/set-firewall-rules.yml /tmp/fw.yml
-LUDUS_FW_FILE=/tmp/fw.yml ./ludus-wg-callbacks.sh   # patches the copy, logs to syslog
+LUDUS_FW_FILE=/tmp/fw.yml ./scripts/ludus-wg-callbacks.sh   # patches the copy, logs to syslog
 
 cp /path/to/server-config.yml /tmp/sc.yml
-LUDUS_TZ_FILE=/tmp/sc.yml ./ludus-timezone.sh       # patches the copy, logs to syslog
+LUDUS_TZ_FILE=/tmp/sc.yml ./scripts/ludus-timezone.sh       # patches the copy, logs to syslog
 ```
 
 `README.md` has the install/uninstall steps and the end-to-end checks.

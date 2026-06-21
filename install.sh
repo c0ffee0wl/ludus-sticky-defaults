@@ -22,10 +22,10 @@ tz_sbin="/usr/local/sbin/ludus-timezone.sh"
 dropin_dir="/etc/systemd/system/ludus.service.d"
 
 install -d -m 755 "$dropin_dir"
-install -m 700 "$src_dir/ludus-wg-callbacks.sh" "$wg_sbin"
-install -m 700 "$src_dir/ludus-timezone.sh" "$tz_sbin"
-install -m 644 "$src_dir/ludus.service.d/10-wg-callbacks.conf" "$dropin_dir/10-wg-callbacks.conf"
-install -m 644 "$src_dir/ludus.service.d/20-timezone.conf" "$dropin_dir/20-timezone.conf"
+install -m 700 "$src_dir/scripts/ludus-wg-callbacks.sh" "$wg_sbin"
+install -m 700 "$src_dir/scripts/ludus-timezone.sh" "$tz_sbin"
+install -m 644 "$src_dir/systemd/ludus.service.d/10-wg-callbacks.conf" "$dropin_dir/10-wg-callbacks.conf"
+install -m 644 "$src_dir/systemd/ludus.service.d/20-timezone.conf" "$dropin_dir/20-timezone.conf"
 
 systemctl daemon-reload
 
