@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# install.sh: install ludus-wg-callbacks on a Ludus host.
+# install.sh: install the Ludus host patches (WireGuard callbacks + UTC timezone).
 #
-#   - copies the patcher to /usr/local/sbin
-#   - installs the ludus.service ExecStartPre drop-in
-#   - reloads systemd and patches the currently-extracted file once
+#   - copies both patchers to /usr/local/sbin
+#   - installs their ludus.service ExecStartPre drop-ins
+#   - reloads systemd and patches the currently-extracted files once
 #
 # Run as root from the repo directory: sudo ./install.sh
 
@@ -17,34 +17,42 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 src_dir="$(cd "$(dirname "$0")" && pwd)"
-sbin="/usr/local/sbin/ludus-wg-callbacks.sh"
+wg_sbin="/usr/local/sbin/ludus-wg-callbacks.sh"
+tz_sbin="/usr/local/sbin/ludus-timezone.sh"
 dropin_dir="/etc/systemd/system/ludus.service.d"
-dropin="$dropin_dir/10-wg-callbacks.conf"
 
-install -m 700 "$src_dir/ludus-wg-callbacks.sh" "$sbin"
 install -d -m 755 "$dropin_dir"
-install -m 644 "$src_dir/ludus.service.d/10-wg-callbacks.conf" "$dropin"
+install -m 700 "$src_dir/ludus-wg-callbacks.sh" "$wg_sbin"
+install -m 700 "$src_dir/ludus-timezone.sh" "$tz_sbin"
+install -m 644 "$src_dir/ludus.service.d/10-wg-callbacks.conf" "$dropin_dir/10-wg-callbacks.conf"
+install -m 644 "$src_dir/ludus.service.d/20-timezone.conf" "$dropin_dir/20-timezone.conf"
 
 systemctl daemon-reload
 
-# Patch whatever is on disk right now; the drop-in handles future restarts and
+# Patch whatever is on disk right now; the drop-ins handle future restarts and
 # upgrades.
-"$sbin"
+"$wg_sbin"
+"$tz_sbin"
 
 cat <<'EOF'
 
-ludus-wg-callbacks installed.
+Ludus host patches installed.
 
-  patcher : /usr/local/sbin/ludus-wg-callbacks.sh
-  drop-in : /etc/systemd/system/ludus.service.d/10-wg-callbacks.conf
+  patchers : /usr/local/sbin/ludus-wg-callbacks.sh
+             /usr/local/sbin/ludus-timezone.sh
+  drop-ins : /etc/systemd/system/ludus.service.d/10-wg-callbacks.conf
+             /etc/systemd/system/ludus.service.d/20-timezone.conf
 
-The host-side default is now ACCEPT and will be re-applied on every ludus
-(re)start, including the restart that `ludus-server --update` performs.
+The host-side WireGuard default is now ACCEPT and the default range timezone is
+now Etc/UTC. Both are re-applied on every ludus (re)start, including the restart
+that `ludus-server --update` performs.
 
-Ranges you've already deployed keep their current REJECT rule until you re-run
-the network role. For one range:
+Ranges you've already deployed keep their current behaviour until you re-deploy.
+The WireGuard rule re-applies with the network role; the timezone is applied when
+a VM is (re)configured. For one range:
 
-  ludus range deploy -t network
+  ludus range deploy -t network    # WireGuard callback rule
+  ludus range deploy               # picks up the new timezone on VM config
 
 For every user (run as an admin):
 
