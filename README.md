@@ -3,9 +3,9 @@
 Two small patches for a [Ludus](https://gitlab.com/badsectorlabs/ludus) host. Each restores a
 Ludus 1 default that Ludus 2 changed, and keeps it from reverting on the next upgrade:
 
-- **WireGuard callbacks** — let a range call back to a WireGuard client (a reverse shell to your
+- **WireGuard callbacks:** let a range call back to a WireGuard client (a reverse shell to your
   Kali box) again.
-- **Default range timezone** — set range VMs to `Etc/UTC` instead of `America/New_York`.
+- **Default range timezone:** set range VMs to `Etc/UTC` instead of `America/New_York`.
 
 They share one installer and are independent of each other. Ludus rebuilds its `ansible/` tree
 from the server binary on every `ludus-server --update`, wiping any hand edit, so each patch is a
@@ -57,7 +57,7 @@ sudo /usr/local/sbin/ludus-timezone.sh
 </details>
 
 Installing only patches the host. Ranges you've already deployed don't change until you re-deploy
-them — see [below](#apply-to-ranges-youve-already-deployed).
+them (see [below](#apply-to-ranges-youve-already-deployed)).
 
 ## What it does
 
@@ -74,7 +74,7 @@ jump: "{{ network.wireguard_vlan_default | default('REJECT') }}"
 ```
 
 That `default('REJECT')` is what a range gets unless it sets `network.wireguard_vlan_default`
-itself, and it's what stops a range VM from opening a connection back to a WireGuard client — so
+itself, and it's what stops a range VM from opening a connection back to a WireGuard client, so
 your reverse shell never lands. The patch changes the default to `ACCEPT`. Ranges that set the key
 keep their own value.
 
@@ -104,7 +104,7 @@ until you re-run the relevant deploy:
 
 ```bash
 ludus range deploy -t network    # WireGuard rule (network role only)
-ludus range deploy               # timezone — set at VM-config time, so a full deploy
+ludus range deploy               # timezone: set at VM-config time, so a full deploy
 ```
 
 Admins can target another user's range with `--user <userID>`, or hit everyone at once:
@@ -117,8 +117,8 @@ done
 
 New ranges pick up both defaults from the start.
 
-**Reboots and restores.** A network deploy doesn't just set the WireGuard rule live — it saves the
-router's ruleset to `/etc/iptables/rules.v4`, which `netfilter-persistent` reloads on boot. So
+**Reboots and restores.** A network deploy doesn't only set the WireGuard rule live. It also saves
+the router's ruleset to `/etc/iptables/rules.v4`, which `netfilter-persistent` reloads on boot. So
 rebooting or restoring your target VMs or the router itself is fine. The one way to lose the rule
 is reverting the *router* to a snapshot taken before that deploy; re-run `ludus range deploy -t
 network` and it's back.
@@ -134,7 +134,7 @@ journalctl -t ludus-wg-callbacks   # one line each time it patches the firewall 
 journalctl -t ludus-timezone       # one line each time it patches server-config.yml
 ```
 
-You can run a patcher yourself any time — it's exactly what the `ExecStartPre` hook does, doesn't
+You can run a patcher yourself any time. It's exactly what the `ExecStartPre` hook does, doesn't
 disturb the running server, and only logs when there's something to change:
 
 ```bash
@@ -149,13 +149,13 @@ LUDUS_TZ_FILE=/tmp/sc.yml ./scripts/ludus-timezone.sh
 grep timezone /tmp/sc.yml           # -> timezone: "Etc/UTC"
 ```
 
-End to end: after `ludus range deploy -t network`, the router should show the rule —
+End to end: after `ludus range deploy -t network`, the router should show the rule:
 
 ```bash
 iptables -S LUDUS_DEFAULTS | grep 198.51.100.0/24   # -j ACCEPT
 ```
 
-— and a reverse shell from a range VM back to your Kali box over WireGuard should connect. For the
+A reverse shell from a range VM back to your Kali box over WireGuard should then connect. For the
 timezone, after a range re-deploy a Linux guest reports `Etc/UTC` (`timedatectl`) and a Windows
 deploy finishes without the timezone-lookup failure.
 
@@ -180,9 +180,9 @@ behaviour until you re-deploy them.
 
 The patch lives in two layers that do different jobs:
 
-- **Host** — the default a deploy *reads*: the line in `set-firewall-rules.yml` (or
+- **Host:** the default a deploy *reads*. This is the line in `set-firewall-rules.yml` (or
   `server-config.yml`). The patcher edits this, and on its own it changes nothing already running.
-- **Router** — the rule a deploy *writes*: `ludus range deploy -t network` reads the patched
+- **Router:** the rule a deploy *writes*. `ludus range deploy -t network` reads the patched
   `ACCEPT` default and writes the matching iptables rule into the router's `LUDUS_DEFAULTS` chain.
   (The timezone has no router layer; it lands when a VM is configured, which is a full deploy.)
 
@@ -192,7 +192,7 @@ whole `ansible/` tree from the server binary
 edit is gone after the next upgrade. That's why each patch ships as a systemd drop-in: an update
 stops `ludus`, re-extracts `ansible/`, then restarts it, and the drop-in hangs an `ExecStartPre`
 on [`ludus.service`](https://gitlab.com/badsectorlabs/ludus/-/blob/main/ludus-server/ansible/proxmox-install/templates/ludus.service.j2)
-that re-applies the patch just before the server comes back — on every update, and on every boot.
+that re-applies the patch just before the server comes back, on every update and on every boot.
 The drop-ins live under `/etc/systemd/system/`, outside `/opt/ludus`, where the re-extraction
 can't reach them.
 
@@ -202,7 +202,7 @@ a lot of work:
 
 - Once patched it's a clean no-op, so re-running it can't churn the file or get stuck in a loop.
 - If a later Ludus renames the line, reformats it, or fixes the default itself, nothing matches and
-  the file is left untouched — the patch steps aside rather than fighting upstream or corrupting a
+  the file is left untouched. The patch steps aside rather than fighting upstream or corrupting a
   file it doesn't recognise.
 - The edit is scoped to the one line, so the WireGuard patch never touches the sibling
   `inter_vlan_default` and `external_default` rules, and the timezone patch never touches another
